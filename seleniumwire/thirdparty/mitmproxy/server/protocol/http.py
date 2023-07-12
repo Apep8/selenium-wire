@@ -253,7 +253,11 @@ class HttpLayer(base.Layer):
             layer = UpstreamConnectLayer(self, f.request)
             return layer()
         elif f.response.status_code == 407:
-            log.error('Invalid proxy server credentials supplied')
+            _, proxy_authority = self.config.options.mode.split('upstream:')
+            username, _ = self.config.options.upstream_auth.split(':')
+            log.error("Couldn't connect to proxy server %s with username %s", proxy_authority, username)
+            return False
+
         return False
 
     def _process_flow(self, f):
