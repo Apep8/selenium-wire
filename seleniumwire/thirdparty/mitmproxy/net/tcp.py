@@ -1,5 +1,6 @@
 import errno
 import os
+import random
 import select
 import socket
 import sys
@@ -594,7 +595,12 @@ class TCPServer:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-            self.socket.bind(self.address)
+
+            _, port = self.address
+            if port:
+                self.socket.bind(self.address)
+            else:
+                self.bind_socket_to_port_from_range()
         except socket.error as e:
             if self.socket:
                 self.socket.close()
@@ -608,7 +614,12 @@ class TCPServer:
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                self.socket.bind(self.address)
+
+                _, port = self.address
+                if port:
+                    self.socket.bind(self.address)
+                else:
+                    self.bind_socket_to_port_from_range()
             except socket.error as e:
                 if self.socket:
                     self.socket.close()
@@ -621,11 +632,25 @@ class TCPServer:
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            self.socket.bind(self.address)
 
         self.address = self.socket.getsockname()
         self.socket.listen()
         self.handler_counter = Counter()
+
+    def bind_socket_to_port_from_range(self):
+        host, _ = self.address
+        for _ in range(10):
+            try:
+                port = random.randint(6000, 6200)
+                self.socket.bind((host, port))
+                return self.socket
+            except socket.error as e:
+                pass
+        else:
+            port = random.randint(6000, 6200)
+            self.socket.bind((host, port))
+
+
 
     def connection_thread(self, connection, client_address):
         with self.handler_counter:
