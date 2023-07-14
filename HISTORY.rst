@@ -1,6 +1,12 @@
 History
 ~~~~~~~
 
+5.2.0 (2023-07-14)
+------------------
+
+* use ports for mitmproxy only from specified range (6000 - 6200)
+* improve invalid proxy error message
+
 5.1.0 (2022-10-15)
 ------------------
 
